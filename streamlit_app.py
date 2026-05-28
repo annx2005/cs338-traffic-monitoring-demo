@@ -15,7 +15,8 @@ import streamlit as st
 
 
 ROOT = Path(__file__).resolve().parent
-DEFAULT_VEHICLE_MODEL = ROOT / "yolov8n-seg.pt"
+DEFAULT_ROAD_MODEL = ROOT / "models" / "stream1" / "road_seg.pt"
+DEFAULT_VEHICLE_MODEL = ROOT / "models" / "stream2" / "vehicle_seg.pt"
 DEFAULT_TRACKER = ROOT / "configs" / "botsort.yaml"
 RUNS_DIR = ROOT / "outputs" / "streamlit_runs"
 
@@ -404,7 +405,10 @@ def save_uploaded_video(uploaded_file) -> Path:
 
 def render_sidebar() -> dict[str, Any]:
     st.sidebar.header("Cấu hình")
-    road_model_path = st.sidebar.text_input("Road model path (để trống = heuristic ROI)", value="")
+    road_model_path = st.sidebar.text_input(
+        "Road model path (để trống = heuristic ROI)",
+        value=str(DEFAULT_ROAD_MODEL if DEFAULT_ROAD_MODEL.exists() else ""),
+    )
     vehicle_model_path = st.sidebar.text_input(
         "Vehicle model path",
         value=str(DEFAULT_VEHICLE_MODEL if DEFAULT_VEHICLE_MODEL.exists() else ""),
