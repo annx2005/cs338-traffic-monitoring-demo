@@ -240,6 +240,19 @@ def compute_ror(road_bev: np.ndarray, vehicle_bev_masks: list[np.ndarray]) -> fl
     return round((occupied / road_area) * 100.0, 2)
 
 
+def color_for_class(class_id: int) -> tuple[int, int, int]:
+    palette = [
+        (0, 220, 255),
+        (84, 184, 255),
+        (62, 255, 150),
+        (255, 190, 80),
+        (255, 120, 120),
+        (180, 120, 255),
+        (255, 255, 120),
+    ]
+    return palette[class_id % len(palette)]
+
+
 def draw_overlay(
     frame: np.ndarray,
     road_mask: np.ndarray,
@@ -253,10 +266,17 @@ def draw_overlay(
     canvas = cv2.addWeighted(canvas, 1.0, road_overlay, 0.35, 0)
 
     accepted_ids = {id(track) for track in accepted_tracks}
+    vehicle_overlay = canvas.copy()
+    for track in accepted_tracks:
+        if track.mask is None:
+            continue
+        vehicle_overlay[track.mask > 0] = color_for_class(track.class_id)
+    canvas = cv2.addWeighted(vehicle_overlay, 0.45, canvas, 0.55, 0)
+
     for track in tracks:
         x1, y1, x2, y2 = [int(v) for v in track.bbox]
         accepted = id(track) in accepted_ids
-        color = (0, 220, 255) if accepted else (90, 90, 90)
+        color = color_for_class(track.class_id) if accepted else (90, 90, 90)
         cv2.rectangle(canvas, (x1, y1), (x2, y2), color, 2)
         label = f"ID:{track.track_id} C:{track.class_id} {track.confidence:.2f}"
         cv2.putText(canvas, label, (x1, max(20, y1 - 8)), cv2.FONT_HERSHEY_SIMPLEX, 0.55, color, 2)
